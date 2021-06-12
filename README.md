@@ -30,10 +30,13 @@ This software is provided completely free of charge to you, however I spent time
 
 ## Building
 
+1. Build Solution for all Release targets
+2. Compile installer.iss with InnoSetup
+
 ## License
 
 	Copyright 2021 namazso <admin@namazso.eu>
-	IDAShell - File hashing shell extension
+	IDAShell - Shell extension for opening executables in IDA
 	
 	IDAShell is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
