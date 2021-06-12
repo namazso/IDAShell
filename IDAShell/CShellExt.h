@@ -19,7 +19,7 @@
 class CShellExt : public IShellExtInit, IContextMenu
 {
   wchar_t _file[PATHCCH_MAX_CCH]{};
-	ULONG _refs{};
+  ULONG _refs{};
   IDAType _type = IDAType::Unsupported;
 
 public:
@@ -34,15 +34,15 @@ public:
   ULONG STDMETHODCALLTYPE AddRef() override;
   ULONG STDMETHODCALLTYPE Release() override;
 
-	// IShellExtInit
-	HRESULT STDMETHODCALLTYPE Initialize(
+  // IShellExtInit
+  HRESULT STDMETHODCALLTYPE Initialize(
     _In_opt_  PCIDLIST_ABSOLUTE folder,
     _In_opt_  IDataObject*      data,
     _In_opt_  HKEY              prog_id
   ) override;
 
-	// IContextMenu
-	HRESULT STDMETHODCALLTYPE QueryContextMenu(
+  // IContextMenu
+  HRESULT STDMETHODCALLTYPE QueryContextMenu(
     HMENU menu,
     UINT index_menu,
     UINT cmd_first,
