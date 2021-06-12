@@ -133,11 +133,14 @@ void execute_ida(bool is_64, const wchar_t* path)
     }
   }
 
+  wchar_t path_quoted[PATHCCH_MAX_CCH] = L"\"";
+  wcscat_s(path_quoted, path);
+  wcscat_s(path_quoted, L"\"");
   const auto ret = (ULONG)(ULONG_PTR)ShellExecuteW(
     nullptr,
     nullptr,
     ida_path,
-    path,
+    path_quoted,
     nullptr,
     SW_NORMAL
   );
