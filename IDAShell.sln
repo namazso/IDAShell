@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31321.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IDAShell", "IDAShell\IDAShell.vcxproj", "{C62BE6F9-FA57-42CB-93E7-ABCED873823C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Debug|ARM64.Build.0 = Debug|ARM64
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Debug|x64.ActiveCfg = Debug|x64
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Debug|x64.Build.0 = Debug|x64
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Debug|x86.ActiveCfg = Debug|Win32
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Debug|x86.Build.0 = Debug|Win32
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Release|ARM64.ActiveCfg = Release|ARM64
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Release|ARM64.Build.0 = Release|ARM64
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Release|x64.ActiveCfg = Release|x64
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Release|x64.Build.0 = Release|x64
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Release|x86.ActiveCfg = Release|Win32
+		{C62BE6F9-FA57-42CB-93E7-ABCED873823C}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C793A13F-FB66-40C4-8A02-B895EC34DEF0}
+	EndGlobalSection
+EndGlobal
