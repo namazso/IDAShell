@@ -198,6 +198,80 @@ constexpr static identify_fn k_identify_functions[] =
     if (magic == 0xfeedfacf || magic == 0xcffaedfe)
       return IDAType::IDA64;
     return IDAType::Unsupported;
+  },
+  
+  // FAT Mach-O
+  [](char* buf)
+  {
+    struct fat_header
+    {
+      uint32_t  magic;
+      uint32_t  fat_arch_count;
+    };
+
+    struct fat_arch
+    {
+      uint32_t  cpu_type;
+      uint32_t  cpu_subtype;
+      uint32_t  offset;
+      uint32_t  size;
+      uint32_t  align;
+    };
+
+    enum : uint32_t
+    {
+      CPU_ARCH_MASK     = 0xff000000,
+      CPU_ARCH_ABI64    = 0x01000000,
+      CPU_ARCH_ABI64_32 = 0x02000000,
+    };
+    
+    const auto hdr = read<fat_header>(buf, 0);
+
+    unsigned long(*to_native)(unsigned long) = [](unsigned long v) { return v; };
+
+    if (hdr->magic == 0xbebafeca)
+      to_native = &_byteswap_ulong;
+    else if (hdr->magic != 0xcafebabe)
+      return IDAType::Unsupported;
+
+    auto has_64 = false;
+    auto has_32 = false;
+    auto has_any = false;
+
+    const auto count = to_native(hdr->fat_arch_count);
+
+    for (auto i = 0u; i < count; ++i)
+    {
+      const auto arch = read<fat_arch>(buf, sizeof(fat_header) + i * sizeof(fat_arch));
+      if (!arch)
+        break;
+
+      switch (to_native(arch->cpu_type) & CPU_ARCH_MASK)
+      {
+      case 0:
+        has_32 = true;
+        break;
+      case CPU_ARCH_ABI64:
+      case CPU_ARCH_ABI64_32: // watchOS?
+        has_64 = true;
+        break;
+      case 0xFF000000: // -1 = any
+        has_any = true;
+        break;
+      default:
+        break;
+      }
+    }
+
+    if (has_64)
+      return IDAType::IDA64;
+    if (has_32)
+      return IDAType::IDA32;
+    if (has_any)
+      return IDAType::IDA64;
+
+    // empty, corrupt, or wrong detection
+    return IDAType::Unsupported;
   }
 };
 
