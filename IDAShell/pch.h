@@ -69,3 +69,4 @@
 #include <atomic>
 #include <xutility>
 #include <optional>
+#include <array>

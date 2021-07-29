@@ -77,6 +77,56 @@ static std::optional<T> read(char* buf, uint32_t offset)
 
 using identify_fn = IDAType(*)(char* buf);
 
+static IDAType image_file_machine_to_idatype(WORD machine)
+{
+  switch (machine)
+  {
+  case IMAGE_FILE_MACHINE_I386:
+  case IMAGE_FILE_MACHINE_R3000:
+  case IMAGE_FILE_MACHINE_R4000:
+  case IMAGE_FILE_MACHINE_R10000:
+  case IMAGE_FILE_MACHINE_WCEMIPSV2:
+  case IMAGE_FILE_MACHINE_ALPHA:
+  case IMAGE_FILE_MACHINE_SH3:
+  case IMAGE_FILE_MACHINE_SH3DSP:
+  case IMAGE_FILE_MACHINE_SH3E:
+  case IMAGE_FILE_MACHINE_SH4:
+  case IMAGE_FILE_MACHINE_SH5:
+  case IMAGE_FILE_MACHINE_ARM:
+  case IMAGE_FILE_MACHINE_THUMB:
+  case IMAGE_FILE_MACHINE_ARMNT:
+  case IMAGE_FILE_MACHINE_AM33:
+  case IMAGE_FILE_MACHINE_POWERPC:
+  case IMAGE_FILE_MACHINE_POWERPCFP:
+  case IMAGE_FILE_MACHINE_MIPS16:
+  case IMAGE_FILE_MACHINE_MIPSFPU:
+  case IMAGE_FILE_MACHINE_MIPSFPU16:
+  case IMAGE_FILE_MACHINE_TRICORE:
+  case IMAGE_FILE_MACHINE_CEF:
+  case IMAGE_FILE_MACHINE_EBC:
+  case IMAGE_FILE_MACHINE_M32R:
+  case 0x5032: // IMAGE_FILE_MACHINE_RISCV32 
+    return IDAType::IDA32;
+
+  case IMAGE_FILE_MACHINE_ARM64:
+  case IMAGE_FILE_MACHINE_AMD64:
+  case IMAGE_FILE_MACHINE_ALPHA64:
+  case IMAGE_FILE_MACHINE_IA64:
+    return IDAType::IDA64;
+
+  default:
+    return IDAType::Unsupported;
+  }
+}
+
+static IDAType try_coff(char* buf, uint32_t start_offset)
+{
+  const auto machine = read<WORD>(buf, start_offset);
+  if (!machine)
+    return IDAType::Unsupported;
+  return image_file_machine_to_idatype(*machine);
+}
+
 constexpr static identify_fn k_identify_functions[] =
 {
   // MZ NE PE
@@ -92,42 +142,8 @@ constexpr static identify_fn k_identify_functions[] =
     const auto machine = read<USHORT>(buf, e_lfanew.value() + offsetof(IMAGE_NT_HEADERS, FileHeader.Machine));
     if (!machine)
       return IDAType::Unsupported; // might be DOS but it'd be pretty impressive
-    switch(machine.value())
-    {
-    case IMAGE_FILE_MACHINE_I386:
-    case IMAGE_FILE_MACHINE_R3000:
-    case IMAGE_FILE_MACHINE_R4000:
-    case IMAGE_FILE_MACHINE_R10000:
-    case IMAGE_FILE_MACHINE_WCEMIPSV2:
-    case IMAGE_FILE_MACHINE_ALPHA:
-    case IMAGE_FILE_MACHINE_SH3:
-    case IMAGE_FILE_MACHINE_SH3DSP:
-    case IMAGE_FILE_MACHINE_SH3E:
-    case IMAGE_FILE_MACHINE_SH4:
-    case IMAGE_FILE_MACHINE_SH5:
-    case IMAGE_FILE_MACHINE_ARM:
-    case IMAGE_FILE_MACHINE_THUMB:
-    case IMAGE_FILE_MACHINE_ARMNT:
-    case IMAGE_FILE_MACHINE_AM33:
-    case IMAGE_FILE_MACHINE_POWERPC:
-    case IMAGE_FILE_MACHINE_POWERPCFP:
-    case IMAGE_FILE_MACHINE_MIPS16:
-    case IMAGE_FILE_MACHINE_MIPSFPU:
-    case IMAGE_FILE_MACHINE_MIPSFPU16:
-    case IMAGE_FILE_MACHINE_TRICORE:
-    case IMAGE_FILE_MACHINE_CEF:
-    case IMAGE_FILE_MACHINE_EBC:
-    case IMAGE_FILE_MACHINE_M32R:
-    case 0x5032: // IMAGE_FILE_MACHINE_RISCV32 
-      return IDAType::IDA32;
-
-    case IMAGE_FILE_MACHINE_ARM64:
-    case IMAGE_FILE_MACHINE_AMD64:
-    case IMAGE_FILE_MACHINE_ALPHA64:
-    case IMAGE_FILE_MACHINE_IA64:
-    default: // who even makes 32 bit cpus anymore
-      return IDAType::IDA64;
-    }
+    const auto type = image_file_machine_to_idatype(machine.value());
+    return type == IDAType::Unsupported ? IDAType::IDA64 : type; // who even makes 32 bit cpus anymore
   },
 
   // ELF
@@ -271,6 +287,49 @@ constexpr static identify_fn k_identify_functions[] =
       return IDAType::IDA64;
 
     // empty, corrupt, or wrong detection
+    return IDAType::Unsupported;
+  },
+
+  // COFF
+  [](char* buf) { return try_coff(buf, 0); },
+    
+  // AR + COFF (.lib files)
+  [](char* buf)
+  {
+    // not an ar file
+    if (!(read<uint64_t>(buf, 0) == 0x0A3E686372613C21))
+      return IDAType::Unsupported;
+
+    // skip magic
+    auto offset = 8u;
+    while (auto file_size = read<std::array<char, 12>>(buf, offset + 48))
+    {
+      auto& size = file_size.value();
+
+      // invalid file header
+      if (size[10] != 0x60 || size[11] != 0x0A)
+        return IDAType::Unsupported;
+
+      // skip file header
+      offset += 60;
+
+      // try detecting a COFF
+      const auto detection = try_coff(buf, offset);
+      if (detection != IDAType::Unsupported)
+        return detection;
+
+      // zero out to prevent strtoull accessing oob
+      size[10] = 0;
+
+      // skip the file
+      const auto filesize = strtoul(size.data(), nullptr, 10);
+      offset += filesize;
+
+      // align to even byte boundary
+      offset += offset % 2;
+    }
+
+    // didnt find any COFF in first 4 kB
     return IDAType::Unsupported;
   }
 };
