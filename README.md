@@ -1,3 +1,7 @@
+# [IDA 8.2](https://hex-rays.com/blog/ida-8-2-released/) added 32 bit support to IDA64, making this plugin largely unnecessary.
+
+---
+
 # IDAShell
 
 [![License](https://img.shields.io/github/license/namazso/IDAShell)](LICENSE)  [![Downloads](https://img.shields.io/github/downloads/namazso/IDAShell/total)](https://github.com/namazso/IDAShell/releases/latest) [![GitHub Version](https://img.shields.io/github/v/release/namazso/IDAShell)](https://github.com/namazso/IDAShell/releases/latest) ![Commits since release](https://img.shields.io/github/commits-since/namazso/IDAShell/latest/master)
